@@ -1,41 +1,32 @@
-<!doctype html>
-<html lang="zh-CN">
+<!DOCTYPE html>
+<html>
 <head>
-<title>默认解析</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <meta charset="UTF-8">
-</head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta content="telephone=no" name="format-detection">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<link rel="stylesheet" href="./lib/dplayer/DPlayer.min.css">
 <style>
-    body,html{width:100%;height:100%;background:#000;padding:0;margin:0;overflow-x:hidden;overflow-y:hidden}
-    *{margin:0;border:0;padding:0;text-decoration:none}
-    #stats{position:fixed;top:5px;left:10px;font-size:12px;color:#fdfdfd;z-index:2147483647;text-shadow:1px 1px 1px #000, 1px 1px 1px #000}
-    #dplayer{position:inherit;
-width: 100%;
-    height: 100%;
-    margin: 0 auto;
-}
-.dplayer-controller .dplayer-icons .dplayer-full:hover .dplayer-full-in-icon{
-display:none !important
-}
-.dplayer-menu>div:nth-last-child(-n+2) {
-    display: none;
-}
+*{margin:0;padding:0}
+html,body{height:100%;width:100%;background-color:#000}
+#dplayer{height:100%;width:100%}
 </style>
-
-
+</head>
 <body>
-<?php
-if($_GET['url']){
-$spurl=@$_GET['url'];$zimu=@$_GET['zimu'];
-?>
 <div id="dplayer"></div>
+<?php
+$url=trim($_GET['url']);
+$zimu=trim($_GET['zimu']);
+$spurl=str_replace('https://v.qq.com/x/cover/','https://v.qq.com/x/page/',$url);
 
-<?php if(strpos($_GET['url'], '.flv')) {echo '<script src="./lib/dplayer/flv.min.js"></script>';}
-if(strpos($_GET['url'], 'magnet:')) {echo '<script src="./lib/dplayer/webtorrent.min.js"></script>';} ?>
+$episodes = isset($_GET['episodes']) ? json_decode(urldecode($_GET['episodes']), true) : array();
+$currentIndex = isset($_GET['currentIndex']) ? intval($_GET['currentIndex']) : 0;
+?>
+<?php if(strpos($spurl, '.flv')) {echo '<script src="./lib/dplayer/flv.min.js"></script>';}
+if(strpos($spurl, 'magnet:')) {echo '<script src="./lib/dplayer/webtorrent.min.js"></script>';} ?>
 <script src="./lib/dplayer/hls.min.js"></script>
 <script src="./lib/dplayer/DPlayer.min.js"></script>
-
-
 <script>
     var webdata = {
         set:function(key,val){
@@ -51,50 +42,201 @@ if(strpos($_GET['url'], 'magnet:')) {echo '<script src="./lib/dplayer/webtorrent
             window.sessionStorage.clear();
         }
     };
-var vurl='<?php echo $spurl; ?>';
-const dp = new DPlayer({
-                container: document.getElementById('dplayer'),
-                screenshot: false,lang: 'zh-cn',hotkey: true,preload: 'auto',
-                //autoplay: true,
-                video: {
-                 url: vurl,type: 'auto',
-                 pic: 'https://ae02.alicdn.com/kf/Hae3544136d6f4bf9aafc7a5993e2ece6C.jpg',
-                },     
-<?php if(!empty($zimu)): ?>
- subtitle: {
-        url: '<?php echo $zimu; ?>',
-        type: 'webvtt',
-        fontSize: '25px',
-        bottom: '10%',
-        color: '#b7daff',
-    },
-<?php endif; ?>  
-   contextmenu: [
-        {
-            text: '画中画模式',
-            click: (player) => {
-player.video.requestPictureInPicture();
-            },
-        },
-    ],      
-       });
-   dp.seek(webdata.get('pay'+vurl));
-    setInterval(function(){
-        webdata.set('pay'+vurl,dp.video.currentTime);
-    },1000);
 </script>
-<?php
+<script>
+var episodes = <?php echo json_encode($episodes); ?>;
+var currentIndex = <?php echo $currentIndex; ?>;
+var dp = null;
+var shouldAutoPlay = false; // 标记是否应该自动播放（只有用户点击播放后才设为true）
 
-
+function initPlayer() {
+    if (episodes.length === 0) {
+        return;
+    }
     
-}else{
-    echo '参数未添加';
+    var ep = episodes[currentIndex];
+    var vurl = ep.url || '';
+    var zimu = ep.zimu || '';
+    vurl = vurl.replace('https://v.qq.com/x/cover/', 'https://v.qq.com/x/page/');
     
+    if (dp) {
+        try {
+            dp.destroy();
+        } catch (e) {
+            console.log('销毁旧播放器失败', e);
+        }
+    }
+    
+    var container = document.getElementById('dplayer');
+    if (container) {
+        container.innerHTML = '';
+    }
+    
+    var playerOptions = {
+        container: container,
+        screenshot: false,
+        lang: 'zh-cn',
+        hotkey: true,
+        preload: 'auto',
+        autoplay: shouldAutoPlay, // 使用标记控制自动播放
+        controls: true,
+        video: {
+            url: vurl,
+            type: 'auto',
+            pic: '',
+        },
+        contextmenu: [
+            {
+                text: '画中画模式',
+                click: function(player) {
+                    player.video.requestPictureInPicture();
+                },
+            },
+        ],
+    };
+    
+    if (zimu) {
+        playerOptions.subtitle = {
+            url: zimu,
+            type: 'webvtt',
+            fontSize: '25px',
+            bottom: '10%',
+            color: '#b7daff',
+        };
+    }
+    
+    dp = new DPlayer(playerOptions);
+    
+    // 监听播放事件，标记用户已点击播放
+    dp.on('play', function() {
+        shouldAutoPlay = true;
+    });
+    
+    dp.seek(webdata.get('pay'+vurl));
+    setInterval(function(){
+        webdata.set('pay'+vurl, dp.video.currentTime);
+    }, 1000);
+    
+    dp.on('ended', function() {
+        playNext();
+    });
+    
+    notifyParent();
 }
 
+function notifyParent() {
+    try {
+        if (window.parent && window.parent !== window && window.parent.postMessage) {
+            window.parent.postMessage({
+                action: 'episodeChange',
+                index: currentIndex
+            }, '*');
+        }
+    } catch (e) {
+        console.log('无法通知父页面');
+    }
+}
 
+function playNext() {
+    if (episodes.length === 0) return;
+    currentIndex++;
+    if (currentIndex >= episodes.length) {
+        // 播放到最后一集，不循环，直接返回停止
+        currentIndex = episodes.length - 1;
+        return;
+    }
+    initPlayer();
+}
 
-?>
+function playPrev() {
+    if (episodes.length === 0) return;
+    currentIndex--;
+    if (currentIndex < 0) {
+        currentIndex = episodes.length - 1;
+    }
+    initPlayer();
+}
+
+function playEpisode(index) {
+    if (index >= 0 && index < episodes.length) {
+        currentIndex = index;
+        initPlayer();
+    }
+}
+
+window.addEventListener('message', function(event) {
+    try {
+        if (event.data && event.data.action === 'playEpisode') {
+            playEpisode(event.data.index);
+        }
+    } catch (e) {
+        console.log('消息处理错误', e);
+    }
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    var container = document.getElementById('dplayer');
+    if (container) {
+        container.innerHTML = '';
+    }
+    
+    if (episodes.length === 0) {
+        var vurl = '<?php echo $spurl; ?>';
+        var zimu = '<?php echo $zimu; ?>';
+        
+        var playerOptions = {
+            container: container,
+            screenshot: false,
+            lang: 'zh-cn',
+            hotkey: true,
+            preload: 'auto',
+            autoplay: false,
+            controls: true,
+            video: {
+                url: vurl,
+                type: 'auto',
+                pic: '',
+            },
+            contextmenu: [
+                {
+                    text: '画中画模式',
+                    click: function(player) {
+                        player.video.requestPictureInPicture();
+                    },
+                },
+            ],
+        };
+        
+        if (zimu) {
+            playerOptions.subtitle = {
+                url: zimu,
+                type: 'webvtt',
+                fontSize: '25px',
+                bottom: '10%',
+                color: '#b7daff',
+            };
+        }
+        
+        dp = new DPlayer(playerOptions);
+        
+        // 监听播放事件，标记用户已点击播放
+        dp.on('play', function() {
+            shouldAutoPlay = true;
+        });
+        
+        dp.seek(webdata.get('pay'+vurl));
+        setInterval(function(){
+            webdata.set('pay'+vurl, dp.video.currentTime);
+        }, 1000);
+    } else {
+        initPlayer();
+    }
+});
+
+setTimeout(function() {
+    notifyParent();
+}, 500);
+
+</script>
 </body>
-
 </html>

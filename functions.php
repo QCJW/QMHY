@@ -49,9 +49,11 @@ if(strpos($_SERVER['SCRIPT_NAME'], "write-post.php")){
     $thumb = new Typecho_Widget_Helper_Form_Element_Text('thumb', NULL, NULL, _t('缩略图'), _t('图片地址'));
     $layout->addItem($thumb);
 
-    $mp4 = new Typecho_Widget_Helper_Form_Element_Textarea('mp4', NULL, NULL, _t('视频地址'), _t('输入视频地址，格式如：第1集$第1集的视频链接 【多集视频请换行输入下一集，如果需要添加字幕请在后面追加“$字幕链接”】'));
+    $mp4 = new Typecho_Widget_Helper_Form_Element_Textarea('mp4', NULL, NULL, _t('视频地址'), _t('输入视频地址，格式如：第1集$第1集的视频链接 【多集视频请换行输入下一集，如果需要添加字幕请在后面追加"字幕链接"】'));
     $layout->addItem($mp4);
 
+    $mediaType = new Typecho_Widget_Helper_Form_Element_Select('mediaType', array('audio' => _t('音频（音乐）'), 'video' => _t('视频')), 'audio', _t('媒体类型'), _t('选择当前文章的媒体类型，音频使用音乐播放器，视频使用视频播放器'));
+    $layout->addItem($mediaType);
 
     $duoji= new Typecho_Widget_Helper_Form_Element_Textarea('duoji', NULL, NULL, _t('多季'), _t('格式如：第一季$文章id'));
     $layout->addItem($duoji);
@@ -98,6 +100,22 @@ function shortenNumber($n, $precision = 0)
 
     return $out;
 }
+
+
+/**
+ * 获取文章的媒体类型
+ * @param Widget_Abstract_Contents $widget 文章对象
+ * @return string 返回 'audio' 或 'video'
+ */
+function getPostMediaType($widget) {
+    // 用户已手动设置媒体类型
+    if ($widget->fields->mediaType) {
+        return $widget->fields->mediaType;
+    }
+    
+    // 默认返回音频类型
+    return 'audio';
+}
 //文章阅读数
 function get_post_view($archive,$r=0)
 {
@@ -123,7 +141,8 @@ array_push($views, $cid);
         }
     }
 if($r==0){
-    echo shortenNumber($row['views']);
+    // 隐藏阅读数据显示，但计数器正常工作
+    // echo shortenNumber($row['views']);
 }
 }
 //头像

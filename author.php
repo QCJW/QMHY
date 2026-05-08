@@ -94,10 +94,10 @@ if(!Typecho_Widget::widget('Widget_User')->uid>0||Typecho_Widget::widget('Widget
 $num=0;
 if($this->fields->postType == 'video'){
 $spurl=$this->fields->toolgo;
-if($this->fields->toolgo && strpos($this->fields->toolgo,'$') == false){$spurl='全集$'.$spurl;}
+if(strpos($this->fields->toolgo,'$') == false){$spurl='全集$'.$spurl;}
 $num=substr_count($spurl,'$');
 }
-elseif($this->fields->postType && strpos($this->fields->postType,'photo') != false){
+elseif(strpos($this->fields->postType,'photo') != false){
 $num=getPostHtmImg($this,1);
 }
 ?>
@@ -107,10 +107,7 @@ $num=getPostHtmImg($this,1);
 <a href="<?php $this->permalink(); ?><?php if($this->fields->mp4&&strlen($this->fields->mp4) > 10){ echo '?action=get&p=1';}?>" class="video-post">
 
 <div class="video-post-thumbnail">
-<span class="video-post-count"><?php get_post_view($this); ?></span>
-<?php if($num!=0): ?>
-<span class="video-post-time"><?php echo $num; ?>P</span>
-<?php endif; ?> 
+<!-- <span class="video-post-count"><?php get_post_view($this); ?></span> -->
 <?php if($this->fields->postType == 'video'): ?><span class="play-btn-trigger"></span><?php endif; ?> 
 
 <img src="<?php showThumbnail($this); ?>" alt="">
@@ -159,10 +156,10 @@ if ($sc->have()): ?>
 $num=0;
 if($sc->fields->postType == 'video'){
 $spurl=$sc->fields->toolgo;
-if($sc->fields->toolgo && strpos($sc->fields->toolgo,'$') == false){$spurl='全集$'.$spurl;}
+if(strpos($sc->fields->toolgo,'$') == false){$spurl='全集$'.$spurl;}
 $num=substr_count($spurl,'$');
 }
-elseif($sc->fields->postType && strpos($sc->fields->postType,'photo') != false){
+elseif(strpos($sc->fields->postType,'photo') != false){
 $num=getPostHtmImg($sc,1);
 }
 ?>
@@ -172,10 +169,7 @@ $num=getPostHtmImg($sc,1);
 <a href="<?php $sc->permalink(); ?><?php if($sc->fields->mp4&&strlen($sc->fields->mp4) > 10){ echo '?action=get&p=1';}?>" class="video-post">
 
 <div class="video-post-thumbnail">
-<span class="video-post-count"><?php get_post_view($sc); ?></span>
-<?php if($num!=0): ?>
-<span class="video-post-time"><?php echo $num; ?>P</span>
-<?php endif; ?> 
+<!-- <span class="video-post-count"><?php get_post_view($sc); ?></span> -->
 <?php if($sc->fields->postType == 'video'): ?><span class="play-btn-trigger"></span><?php endif; ?> 
 
 <img src="<?php showThumbnail($sc); ?>" alt="">

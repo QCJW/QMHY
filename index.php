@@ -5,7 +5,7 @@
  * 
  * @package yingshierhao
  * @author 泽泽社长
- * @version 3.3.3
+ * @version 3.3.2
  * @link https://store.typecho.work/archives/typecho-film-theme.html
  */
 if (!defined('__TYPECHO_ROOT_DIR__')) exit;
@@ -66,45 +66,36 @@ $long=count($string_arr);
 
 
                 <!-- Slideshow -->
-                <div class="uk-position-relative uk-visible-toggle uk-light" tabindex="-1"
-                    uk-slideshow="animation: push ;min-height: 200; max-height: 350 ;autoplay: t rue">
+                <div class="uk-position-relative uk-visible-toggle uk-light uk-margin-auto" style="max-width: 1300px; max-height: 350px; aspect-ratio: 1300/350; background: #fff;" tabindex="-1"
+                    uk-slideshow="animation: push ;min-height: 200; max-height: 350 ;autoplay: true; interval: 3000;">
 
                     <ul class="uk-slideshow-items rounded">
 
 
 <?php 
-for($i=0;$i<$long;$i++){$av="";if($i==0){$av=' class="uk-active uk-transition-active"';}
-$id=explode("$",$string_arr[$i])[0];
-$tu=explode("$",$string_arr[$i])[1];
-$this->widget('Widget_Archive@lunbo'.$i, 'pageSize=1&type=single', 'cid='.$id)->to($ji);
-$zhuijia="";
-if(strlen($ji->fields->mp4) > 10){ $zhuijia="?action=get&p=1";}
-
-echo '<li><a href="'.$ji->permalink.$zhuijia.'">
-                            <div class="uk-position-cover" uk-slideshow-parallax="scale: 1.2,1.2,1">
-                                <img src="'.$tu.'" alt="" uk-cover>
-                            </div>
-                            <div class="uk-position-cover"
-                                uk-slideshow-parallax="opacity: 0,0,0.2; backgroundColor: #000,#000"></div>
-                            <div class="uk-position-bottom-left bg-gradient-4 uk-width-1-1 p-4">
-                                <div uk-slideshow-parallax="scale: 1,1,0.8">
-                                    <h3 uk-slideshow-parallax="x: 200,0,0"> '.$ji->title.'
-                                    </h3>
-                                </div>
-                            </div></a>
-                        </li>';
+for($i=0;$i<$long;$i++){
+    $av = ($i == 0) ? ' class="uk-active uk-transition-active"' : '';
+    
+    // 分割配置项为三部分：标题$图片$链接
+    $parts = explode("$", $string_arr[$i]);
+    $title = isset($parts[0]) ? $parts[0] : '未设置标题';
+    $tu = isset($parts[1]) ? $parts[1] : '';
+    $link = isset($parts[2]) ? $parts[2] : '#'; // 默认链接
+    
+    // 在a标签中添加 target="_blank" 实现新标签页打开
+    echo '<li'.$av.'><a href="'.$link.'" target="_blank">
+        <div class="uk-position-cover">
+            <img src="'.$tu.'" alt="'.$title.'" style="object-fit: contain; height: 100%; width: 100%; background: white;">
+        </div>
+        <div class="uk-position-bottom-left bg-gradient-4 uk-width-1-1 p-4">
+            <div>
+                <h3> '.$title.'
+                </h3>
+            </div>
+        </div></a>
+    </li>';
 }
 ?>
-
-
-
-
-
-
-
-
-
-
 
                     </ul>
 
@@ -118,7 +109,6 @@ echo '<li><a href="'.$ji->permalink.$zhuijia.'">
                 </div>
 
 <?php endif; ?>
-
 
 
 
@@ -167,9 +157,7 @@ $this->widget('Widget_Post_fanjubiao@week'.$i, 'fanjubiao='.${'week'.$i})->to($l
 
 <div tabindex="-1" class="uk-animation-slide-bottom-small">
 <a href="<?php $lianzai->permalink(); ?><?php if($lianzai->fields->mp4&&strlen($lianzai->fields->mp4) > 10){ echo '?action=get&p=1';}?>" class="video-post">
-<div class="media media-16x9">
-<span class="video-post-time"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">
-<?php fanbiao($lianzai); ?></font></font></span>
+<div class="media media-3x4">
 <div class="media-content" style="background-image: url(&quot;<?php showThumbnail($lianzai); ?>&quot;);"></div>
 </div>
 <div class="video-post-content">
@@ -192,10 +180,11 @@ $this->widget('Widget_Post_fanjubiao@week'.$i, 'fanjubiao='.${'week'.$i})->to($l
 
 
 
+
 <?php 
 $n=count($flmid);if($n>0){
 for($i=0;$i<$n;$i++){
-$this->widget('Widget_Archive@fy'.$i, 'pageSize=12&type=category&orderBy=modified', 'mid='.$flmid[$i][0])->to($dy); ?>
+$this->widget('Widget_Archive@fy'.$i, 'pageSize=16&type=category&orderBy=modified', 'mid='.$flmid[$i][0])->to($dy); ?>
 <div class="grid-slider-header mt-5">
                     <div class="section-header-left">
                         <h3><font style="vertical-align: inherit;"><font style="vertical-align: inherit;"><?php echo $flmid[$i][1]; ?></font></font></h3>
@@ -206,13 +195,11 @@ $this->widget('Widget_Archive@fy'.$i, 'pageSize=12&type=category&orderBy=modifie
                 </div>
 
 
-<div class="uk-child-width-1-6@l uk-child-width-1-6@m uk-child-width-1-4@s uk-child-width-1-2 uk-grid uk-grid-stack" uk-grid">
+<div class="uk-child-width-1-8@l uk-child-width-1-6@m uk-child-width-1-3@s uk-child-width-1-3 uk-grid uk-grid-stack" uk-grid>
 <?php while ($dy->next()): ?>
 <li tabindex="-1" class="uk-animation-slide-bottom-small">
 <a href="<?php $dy->permalink(); ?><?php if(strlen($dy->fields->mp4) > 10){ echo '?action=get&p=1';}?>" class="video-post">
-<div class="media media-16x9">
-<span class="video-post-time"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">
-<?php fanbiao($dy); ?></font></font></span>
+<div class="media media-3x4">
 
 <div class="media-content scrollLoading" data-xurl="<?php showThumbnail($dy); ?>"></div>
 </div>
@@ -229,20 +216,24 @@ $this->widget('Widget_Archive@fy'.$i, 'pageSize=12&type=category&orderBy=modifie
 
 
 
+
+
 <?php if (empty(Helper::options()->tools) || !in_array('ycnewadd',Helper::options()->tools)): ?>
 <?php $this->widget('Widget_Contents_Post_Recent', 'pageSize=8')->to($new); ?>
-<h4 class="mb-2">最新加入</h4>
-<div class="uk-child-width-1-8@l uk-child-width-1-6@m uk-child-width-1-3@s uk-child-width-1-3 uk-grid uk-grid-stack" uk-grid">
+<div class="grid-slider-header mt-5">
+                    <div class="section-header-left">
+                        <h3><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">最新加入</font></font></h3>
+                    </div>
+                </div>
+
+<div class="uk-child-width-1-8@l uk-child-width-1-6@m uk-child-width-1-3@s uk-child-width-1-3 uk-grid uk-grid-stack" uk-grid>
 <?php while ($new->next()): ?>
 
-<li tabindex="-1" class="uk-animation-slide-bottom-small<?php if ($new->sequence >6): ?>  uk-visible@l<?php endif; ?>">
+<li tabindex="-1" class="uk-animation-slide-bottom-small">
 <a href="<?php $new->permalink(); ?><?php if($new->fields->mp4&&strlen($new->fields->mp4) > 10){ echo '?action=get&p=1';}?>" class="video-post">
                                     <!-- Blog Post Thumbnail -->
                                 
     <div class="media media-3x4">
-<span class="video-post-time"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">
-<?php fanbiao($new); ?></font></font></span>
-
 
 
 
@@ -251,10 +242,8 @@ $this->widget('Widget_Archive@fy'.$i, 'pageSize=12&type=category&orderBy=modifie
     </div>
 
 <div class="video-post-content">
-                                        <h3><font style="vertical-align: inherit;"><font style="vertical-align: inherit;"><?php $new->title(); ?></font></font></h3>
-                                    </div>
-                                </a>
-                            </li>   
+<h3><font style="vertical-align: inherit;"><font style="vertical-align: inherit;"><?php $new->title(); ?></font></font></h3>
+</div></a></li>   
 
 
 
@@ -265,10 +254,14 @@ $this->widget('Widget_Archive@fy'.$i, 'pageSize=12&type=category&orderBy=modifie
 
 
 
+
+
+
+
 <?php 
 $n=count($dymid);if($n>0){
 for($i=0;$i<$n;$i++){
-$this->widget('Widget_Archive@dy'.$i, 'pageSize=12&type=tag&orderBy=modified', 'mid='.$dymid[$i][0])->to($dy); ?>
+$this->widget('Widget_Archive@dy'.$i, 'pageSize=16&type=tag&orderBy=modified', 'mid='.$dymid[$i][0])->to($dy); ?>
 <div class="grid-slider-header mt-5">
                     <div class="section-header-left">
                         <h3><font style="vertical-align: inherit;"><font style="vertical-align: inherit;"><?php echo $dymid[$i][1]; ?></font></font></h3>
@@ -279,13 +272,11 @@ $this->widget('Widget_Archive@dy'.$i, 'pageSize=12&type=tag&orderBy=modified', '
                 </div>
 
 
-<div class="uk-child-width-1-6@l uk-child-width-1-6@m uk-child-width-1-4@s uk-child-width-1-2 uk-grid uk-grid-stack" uk-grid">
+<div class="uk-child-width-1-6@l uk-child-width-1-6@m uk-child-width-1-4@s uk-child-width-1-2 uk-grid uk-grid-stack" uk-grid>
 <?php while ($dy->next()): ?>
 <li tabindex="-1" class="uk-animation-slide-bottom-small">
 <a href="<?php $dy->permalink(); ?><?php if(strlen($dy->fields->mp4) > 10){ echo '?action=get&p=1';}?>" class="video-post">
-<div class="media media-16x9">
-<span class="video-post-time"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">
-<?php fanbiao($dy); ?></font></font></span>
+<div class="media media-3x4">
 
 <div class="media-content scrollLoading" data-xurl="<?php showThumbnail($dy); ?>"></div>
 </div>

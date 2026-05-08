@@ -23,9 +23,7 @@
 
 <div class="uk-first-column">
 <a href="<?php $relatedPosts->permalink(); ?><?php if($relatedPosts->fields->mp4&&strlen($relatedPosts->fields->mp4) > 10){ echo '?action=get&p=1';}?>" class="video-post">
-<div class="media media-16x9">
-<span class="video-post-time"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">
-<?php fanbiao($relatedPosts); ?></font></font></span>
+<div class="media media-3x4">
 <div class="media-content scrollLoading" data-xurl="<?php showThumbnail($relatedPosts); ?>"></div>
 </div>
 <div class="video-post-content">
@@ -84,9 +82,7 @@ while($to->next()): ?>
 
 <div class="uk-first-column">
 <a href="<?php $to->permalink(); ?><?php if($to->fields->mp4&&strlen($to->fields->mp4) > 10){ echo '?action=get&p=1';}?>" class="video-post">
-<div class="media media-16x9">
-<span class="video-post-time"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">
-<?php fanbiao($to); ?></font></font></span>
+<div class="media media-3x4">
 <div class="media-content scrollLoading" data-xurl="<?php showThumbnail($to); ?>"></div>
 </div>
 <div class="video-post-content">

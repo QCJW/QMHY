@@ -30,22 +30,26 @@ $newurl=$sideurl.$_SERVER['REQUEST_URI'];
                     <div class="sections">
                         <h3> 导航 </h3>
                         <ul>
+                            <!-- 首页和高级索引 -->
                             <li<?php if ($this->is('index')) : ?> class="active"<?php endif; ?>> <a href="<?php $this->options->rootUrl(); ?>/"> <i class="uil-home-alt"></i> <span> 首页 </span> </a></li>
-
-
-
-
-    <!--循环显示页面-->
-    <?php $this->widget('Widget_Contents_Page_List')->to($pages); ?>
 <?php if (empty(Helper::options()->tools) || !in_array('soso',Helper::options()->tools)): ?>
 <li<?php if($this->request->gaojijiansuo){echo ' class="active"';}?>>
 <a class="side-nav-link" href="<?php $this->options->rootUrl(); ?><?php if($this->options->rewrite==0){echo "/index.php";} ?>/search/sy/?gaojijiansuo=1"><i class="uil-search"></i><span>高级索引</span></a>
 </li>
 <?php endif; ?>
+
+
+    <!--循环显示页面-->
+    <?php $this->widget('Widget_Contents_Page_List')->to($pages); ?>
     <?php while($pages->next()): ?>
 <li<?php if($this->is('page', $pages->slug)||$pages->fields->url==$newurl): ?>  class="active"<?php endif; ?>> <a href="<?php if($pages->fields->url){$pages->fields->url();}else{$pages->permalink();} ?>"> <i class="uil-<?php if($pages->fields->icons){$pages->fields->icons();}else{echo 'location-arrow';} ?>"></i> <span>  <?php $pages->title(); ?> </span> </a></li>
     <?php endwhile; ?>
     <!--结束显示页面-->
+
+
+                            <!-- 外部链接 -->
+                            <li> <a href="https://dearestie.xyz?ref_id=549a8115-2bc8-484f-8673-65a99d6201c7" target="_blank"> <i class="uil-heart"></i> <span> Ai女友💋 </span> </a></li>
+                            <li> <a href="https://missai.life//home?inviteCode=FA86290C" target="_blank"> <i class="uil-star"></i> <span> AI女神 </span> </a></li>
 
 
 </ul>
@@ -86,7 +90,7 @@ $newurl=$sideurl.$_SERVER['REQUEST_URI'];
                    <form method="post" action="<?php $this->options->siteUrl(); ?>" role="search">
                         <div class="head_search_cont">
                             <input value="" type="text" name="s" class="form-control"
-                                placeholder="搜索视频.." autocomplete="off">
+                                placeholder="查找内容" autocomplete="off">
                             <i class="s_icon uil-search-alt"></i>
                         </div>
 
@@ -106,7 +110,7 @@ $newurl=$sideurl.$_SERVER['REQUEST_URI'];
                    <form method="post" action="<?php $this->options->siteUrl(); ?>" role="search">
                         <div class="head_search_cont">
                             <input value="" type="text" name="s" class="form-control"
-                                placeholder="搜索视频.." autocomplete="off" style="min-width: 100%;">
+                                placeholder="查找内容" autocomplete="off" style="min-width: 100%;">
                             <i class="s_icon uil-search-alt"></i>
                         </div>
 
