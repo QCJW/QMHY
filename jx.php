@@ -47,7 +47,60 @@ if(strpos($spurl, 'magnet:')) {echo '<script src="./lib/dplayer/webtorrent.min.j
 var episodes = <?php echo json_encode($episodes); ?>;
 var currentIndex = <?php echo $currentIndex; ?>;
 var dp = null;
-var shouldAutoPlay = false; // 标记是否应该自动播放（只有用户点击播放后才设为true）
+var shouldAutoPlay = false;
+var wakeLock = null;
+
+var isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) ||
+               (navigator.maxTouchPoints > 0 && window.matchMedia('(max-width: 768px)').matches);
+
+async function requestWakeLock() {
+    if (!isMobile) return;
+    try {
+        if ('wakeLock' in navigator) {
+            wakeLock = await navigator.wakeLock.request('screen');
+            wakeLock.addEventListener('release', function() {
+                wakeLock = null;
+            });
+        }
+    } catch (e) {}
+}
+
+async function releaseWakeLock() {
+    if (wakeLock) {
+        try {
+            await wakeLock.release();
+            wakeLock = null;
+        } catch (e) {}
+    }
+}
+
+document.addEventListener('visibilitychange', function() {
+    if (!isMobile) return;
+    if (document.visibilityState === 'visible' && dp) {
+        requestWakeLock();
+    } else {
+        releaseWakeLock();
+    }
+});
+
+document.addEventListener('fullscreenchange', function() {
+    if (!isMobile) return;
+    if (!dp || !dp.video) return;
+    var videoEl = dp.video;
+    var vw = videoEl.videoWidth;
+    var vh = videoEl.videoHeight;
+    if (!vw || !vh) return;
+    var isLandscape = vw > vh;
+    if (document.fullscreenElement) {
+        if (isLandscape && screen.orientation && screen.orientation.lock) {
+            screen.orientation.lock('landscape').catch(function() {});
+        }
+    } else {
+        if (screen.orientation && screen.orientation.unlock) {
+            screen.orientation.unlock();
+        }
+    }
+});
 
 function initPlayer() {
     if (episodes.length === 0) {
@@ -107,9 +160,9 @@ function initPlayer() {
     
     dp = new DPlayer(playerOptions);
     
-    // 监听播放事件，标记用户已点击播放
     dp.on('play', function() {
         shouldAutoPlay = true;
+        requestWakeLock();
     });
     
     dp.seek(webdata.get('pay'+vurl));
@@ -219,9 +272,9 @@ document.addEventListener('DOMContentLoaded', function() {
         
         dp = new DPlayer(playerOptions);
         
-        // 监听播放事件，标记用户已点击播放
         dp.on('play', function() {
             shouldAutoPlay = true;
+            requestWakeLock();
         });
         
         dp.seek(webdata.get('pay'+vurl));

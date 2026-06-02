@@ -188,7 +188,7 @@ foreach ($tags as $singleTag): ?>
 
 
 <div class="uk-alert-danger" uk-alert>
-<p>未找到相关内容</p>
+<p>未找到相关内容（ASMR内容请登录再来搜索）</p>
 </div>
 <?php endif; ?>
 

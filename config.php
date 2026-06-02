@@ -16,7 +16,7 @@ $flmid=array
 //分类mid和描述，用于显示在首页最新视频上方，格式如：array("分类mid","想要显示的小标题"),
 array("67","动漫短剧"),
 array("9","galgame原声带"),
-array("11","ASMR"),
+array("11","ASMR（登录查看受限内容）"),
 array("10","动漫原声带"),
 
 );
