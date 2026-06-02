@@ -49,39 +49,67 @@ var currentIndex = <?php echo $currentIndex; ?>;
 var dp = null;
 var shouldAutoPlay = false;
 var wakeLock = null;
+var isManualRelease = false; 
+var progressInterval = null; 
+var videoMetadataReady = false;
 
 var isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) ||
                (navigator.maxTouchPoints > 0 && window.matchMedia('(max-width: 768px)').matches);
 
+// 核心改进：标准的申请常亮锁逻辑
 async function requestWakeLock() {
     if (!isMobile) return;
+    if (!('wakeLock' in navigator)) return;
+    if (wakeLock !== null) return; 
+    
     try {
-        if ('wakeLock' in navigator && !wakeLock) {
-            wakeLock = await navigator.wakeLock.request('screen');
-            wakeLock.addEventListener('release', function() {
+        wakeLock = await navigator.wakeLock.request('screen');
+        console.log('屏幕常亮锁申请成功');
+        wakeLock.addEventListener('release', function() {
+            if (!isManualRelease) {
+                wakeLock = null; // 系统异常释放（如手机锁屏后再解锁），清空指针，等下次手势或特定事件自动恢复
+            } else {
                 wakeLock = null;
-            });
-        }
-    } catch (e) {}
+            }
+        });
+    } catch (e) {
+        console.log('唤醒锁请求暂未获批（等待用户交互）', e.message);
+    }
 }
 
+// 释放锁
 async function releaseWakeLock() {
     if (wakeLock) {
         try {
+            isManualRelease = true;
             await wakeLock.release();
             wakeLock = null;
-        } catch (e) {}
+            console.log('屏幕常亮锁已手动释放');
+        } catch (e) {
+            console.log('唤醒锁释放失败', e);
+        } finally {
+            isManualRelease = false;
+        }
     }
 }
 
+// 监听切后台行为
 document.addEventListener('visibilitychange', function() {
-    // 只要页面可见且视频没有结束，即使暂停也保持常亮
-    if (document.visibilityState === 'visible' && dp && !dp.video.ended) {
-        requestWakeLock();
+    if (document.visibilityState === 'visible') {
+        if (dp && dp.video && !dp.video.ended && !dp.video.paused) {
+            requestWakeLock();
+        }
     } else {
-        releaseWakeLock();
+        releaseWakeLock(); // 切后台时释放，节约手机电量
     }
 });
+
+function bindVideoEvents(videoEl) {
+    if (!videoEl) return;
+    videoEl.addEventListener('loadedmetadata', function() {
+        videoMetadataReady = true;
+    });
+}
 
 function initPlayer() {
     if (episodes.length === 0) {
@@ -93,14 +121,41 @@ function initPlayer() {
     var zimu = ep.zimu || '';
     vurl = vurl.replace('https://v.qq.com/x/cover/', 'https://v.qq.com/x/page/');
     
+    // 【💡 关键改动】绝不销毁播放器实例，通过无缝切换视频源保持浏览器的 Context 上下文不丢失
     if (dp) {
-        try {
-            dp.destroy();
-        } catch (e) {
-            console.log('销毁旧播放器失败', e);
+        videoMetadataReady = false;
+        
+        var videoOptions = {
+            url: vurl,
+            type: 'auto',
+            pic: '',
+        };
+        var subtitleOptions = zimu ? {
+            url: zimu,
+            type: 'webvtt',
+            fontSize: '25px',
+            bottom: '10%',
+            color: '#b7daff',
+        } : null;
+        
+        dp.switchVideo(videoOptions, subtitleOptions);
+        
+        if (shouldAutoPlay) {
+            dp.play();
         }
+        
+        dp.seek(webdata.get('pay'+vurl));
+        
+        if (progressInterval) clearInterval(progressInterval);
+        progressInterval = setInterval(function(){
+            if(dp && dp.video) webdata.set('pay'+vurl, dp.video.currentTime);
+        }, 1000);
+        
+        notifyParent();
+        return;
     }
     
+    // 首次初始化的逻辑
     var container = document.getElementById('dplayer');
     if (container) {
         container.innerHTML = '';
@@ -140,24 +195,34 @@ function initPlayer() {
     }
     
     dp = new DPlayer(playerOptions);
+    bindVideoEvents(dp.video);
+    
+    // 覆盖所有播放状态变化事件来尝试申请锁
+    var keepAwakeEvents = ['play', 'playing', 'waiting', 'seeking', 'seeked', 'loadstart'];
+    keepAwakeEvents.forEach(function(evt) {
+        dp.on(evt, function() {
+            requestWakeLock();
+        });
+    });
     
     dp.on('play', function() {
         shouldAutoPlay = true;
-        requestWakeLock();
-    });
-    
-    dp.on('pause', function() {
-        // 暂停时不做任何处理，保持常亮状态
+        if (videoMetadataReady) {
+            if (typeof handleAutoRotate === 'function') handleAutoRotate(dp.video);
+        } else {
+            dp.video.addEventListener('loadedmetadata', function() {
+                videoMetadataReady = true;
+                if (typeof handleAutoRotate === 'function') handleAutoRotate(dp.video);
+            }, { once: true });
+        }
     });
 
-    // 进入全屏时的旋转逻辑
     dp.on('fullscreen', function() {
         if (!isMobile) return;
         var videoEl = dp.video;
         if (!videoEl) return;
         var vw = videoEl.videoWidth;
         var vh = videoEl.videoHeight;
-        // 只有横屏视频（宽大于高）才触发手机旋转锁定
         if (vw && vh && vw > vh) {
             if (screen.orientation && screen.orientation.lock) {
                 screen.orientation.lock('landscape').catch(function() {});
@@ -165,7 +230,6 @@ function initPlayer() {
         }
     });
 
-    // 退出全屏时解除方向锁定
     dp.on('fullscreen_cancel', function() {
         if (!isMobile) return;
         if (screen.orientation && screen.orientation.unlock) {
@@ -174,13 +238,19 @@ function initPlayer() {
     });
     
     dp.seek(webdata.get('pay'+vurl));
-    setInterval(function(){
-        webdata.set('pay'+vurl, dp.video.currentTime);
+    
+    if (progressInterval) clearInterval(progressInterval);
+    progressInterval = setInterval(function(){
+        if(dp && dp.video) webdata.set('pay'+vurl, dp.video.currentTime);
+        // 【💡 关键改动】移除了原来在此处定时器无条件的 requestWakeLock()，防止无交互下的异常报错死锁
     }, 1000);
     
     dp.on('ended', function() {
-        releaseWakeLock();
-        playNext();
+        if (episodes.length > 0 && currentIndex < episodes.length - 1) {
+            playNext();
+        } else {
+            releaseWakeLock();
+        }
     });
     
     notifyParent();
@@ -204,6 +274,7 @@ function playNext() {
     currentIndex++;
     if (currentIndex >= episodes.length) {
         currentIndex = episodes.length - 1;
+        releaseWakeLock();
         return;
     }
     initPlayer();
@@ -279,14 +350,25 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         dp = new DPlayer(playerOptions);
+        bindVideoEvents(dp.video);
+        
+        var keepAwakeEvents = ['play', 'playing', 'waiting', 'seeking', 'seeked', 'loadstart'];
+        keepAwakeEvents.forEach(function(evt) {
+            dp.on(evt, function() {
+                requestWakeLock();
+            });
+        });
         
         dp.on('play', function() {
             shouldAutoPlay = true;
-            requestWakeLock();
-        });
-        
-        dp.on('pause', function() {
-            // 暂停时保持常亮
+            if (videoMetadataReady) {
+                if (typeof handleAutoRotate === 'function') handleAutoRotate(dp.video);
+            } else {
+                dp.video.addEventListener('loadedmetadata', function() {
+                    videoMetadataReady = true;
+                    if (typeof handleAutoRotate === 'function') handleAutoRotate(dp.video);
+                }, { once: true });
+            }
         });
 
         dp.on('fullscreen', function() {
@@ -310,8 +392,10 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         
         dp.seek(webdata.get('pay'+vurl));
-        setInterval(function(){
-            webdata.set('pay'+vurl, dp.video.currentTime);
+        
+        if (progressInterval) clearInterval(progressInterval);
+        progressInterval = setInterval(function(){
+            if(dp && dp.video) webdata.set('pay'+vurl, dp.video.currentTime);
         }, 1000);
 
         dp.on('ended', function() {
@@ -320,12 +404,21 @@ document.addEventListener('DOMContentLoaded', function() {
     } else {
         initPlayer();
     }
+
+    // 【💡 关键改动：终极补全方案】监听用户的全局手势触摸
+    // 只要视频正在播放，用户一旦点击屏幕查看进度条、调节音量，就会立刻无感知补锁，实现绝对稳定的锁死状态
+    ['touchstart', 'click'].forEach(function(evt) {
+        document.addEventListener(evt, function() {
+            if (dp && dp.video && !dp.video.paused && !dp.video.ended) {
+                requestWakeLock();
+            }
+        }, { passive: true });
+    });
 });
 
 setTimeout(function() {
     notifyParent();
 }, 500);
-
 </script>
 </body>
 </html>
