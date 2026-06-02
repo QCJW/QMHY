@@ -36,7 +36,7 @@ if(strpos($spurl, 'magnet:')) {echo '<script src="./lib/dplayer/webtorrent.min.j
             return window.sessionStorage.getItem(key);
         },
         del:function(key){
-            window.sessionStorage.removeItem(key);
+            return window.sessionStorage.removeItem(key);
         },
         clear:function(key){
             window.sessionStorage.clear();
@@ -56,7 +56,7 @@ var isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) ||
 async function requestWakeLock() {
     if (!isMobile) return;
     try {
-        if ('wakeLock' in navigator) {
+        if ('wakeLock' in navigator && !wakeLock) {
             wakeLock = await navigator.wakeLock.request('screen');
             wakeLock.addEventListener('release', function() {
                 wakeLock = null;
@@ -75,30 +75,11 @@ async function releaseWakeLock() {
 }
 
 document.addEventListener('visibilitychange', function() {
-    if (!isMobile) return;
-    if (document.visibilityState === 'visible' && dp) {
+    // 只要页面可见且视频没有结束，即使暂停也保持常亮
+    if (document.visibilityState === 'visible' && dp && !dp.video.ended) {
         requestWakeLock();
     } else {
         releaseWakeLock();
-    }
-});
-
-document.addEventListener('fullscreenchange', function() {
-    if (!isMobile) return;
-    if (!dp || !dp.video) return;
-    var videoEl = dp.video;
-    var vw = videoEl.videoWidth;
-    var vh = videoEl.videoHeight;
-    if (!vw || !vh) return;
-    var isLandscape = vw > vh;
-    if (document.fullscreenElement) {
-        if (isLandscape && screen.orientation && screen.orientation.lock) {
-            screen.orientation.lock('landscape').catch(function() {});
-        }
-    } else {
-        if (screen.orientation && screen.orientation.unlock) {
-            screen.orientation.unlock();
-        }
     }
 });
 
@@ -131,7 +112,7 @@ function initPlayer() {
         lang: 'zh-cn',
         hotkey: true,
         preload: 'auto',
-        autoplay: shouldAutoPlay, // 使用标记控制自动播放
+        autoplay: shouldAutoPlay, 
         controls: true,
         video: {
             url: vurl,
@@ -165,12 +146,40 @@ function initPlayer() {
         requestWakeLock();
     });
     
+    dp.on('pause', function() {
+        // 暂停时不做任何处理，保持常亮状态
+    });
+
+    // 进入全屏时的旋转逻辑
+    dp.on('fullscreen', function() {
+        if (!isMobile) return;
+        var videoEl = dp.video;
+        if (!videoEl) return;
+        var vw = videoEl.videoWidth;
+        var vh = videoEl.videoHeight;
+        // 只有横屏视频（宽大于高）才触发手机旋转锁定
+        if (vw && vh && vw > vh) {
+            if (screen.orientation && screen.orientation.lock) {
+                screen.orientation.lock('landscape').catch(function() {});
+            }
+        }
+    });
+
+    // 退出全屏时解除方向锁定
+    dp.on('fullscreen_cancel', function() {
+        if (!isMobile) return;
+        if (screen.orientation && screen.orientation.unlock) {
+            screen.orientation.unlock();
+        }
+    });
+    
     dp.seek(webdata.get('pay'+vurl));
     setInterval(function(){
         webdata.set('pay'+vurl, dp.video.currentTime);
     }, 1000);
     
     dp.on('ended', function() {
+        releaseWakeLock();
         playNext();
     });
     
@@ -194,7 +203,6 @@ function playNext() {
     if (episodes.length === 0) return;
     currentIndex++;
     if (currentIndex >= episodes.length) {
-        // 播放到最后一集，不循环，直接返回停止
         currentIndex = episodes.length - 1;
         return;
     }
@@ -277,10 +285,38 @@ document.addEventListener('DOMContentLoaded', function() {
             requestWakeLock();
         });
         
+        dp.on('pause', function() {
+            // 暂停时保持常亮
+        });
+
+        dp.on('fullscreen', function() {
+            if (!isMobile) return;
+            var videoEl = dp.video;
+            if (!videoEl) return;
+            var vw = videoEl.videoWidth;
+            var vh = videoEl.videoHeight;
+            if (vw && vh && vw > vh) {
+                if (screen.orientation && screen.orientation.lock) {
+                    screen.orientation.lock('landscape').catch(function() {});
+                }
+            }
+        });
+
+        dp.on('fullscreen_cancel', function() {
+            if (!isMobile) return;
+            if (screen.orientation && screen.orientation.unlock) {
+                screen.orientation.unlock();
+            }
+        });
+        
         dp.seek(webdata.get('pay'+vurl));
         setInterval(function(){
             webdata.set('pay'+vurl, dp.video.currentTime);
         }, 1000);
+
+        dp.on('ended', function() {
+            releaseWakeLock();
+        });
     } else {
         initPlayer();
     }
