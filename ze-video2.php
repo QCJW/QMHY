@@ -230,7 +230,7 @@ $list=jishulist($this,1);
 padding-bottom:68%;
 }
 </style>
-<iframe width="100%" height="100%" src="<?php if(strpos($spurl,'player.bilibili.com')){echo $spurl.'&as_wide=1&high_quality=1&danmaku=0';}else{echo $spurl;} ?>" frameborder="0" border="0" marginwidth="0" marginheight="0" scrolling="no" allowfullscreen="allowfullscreen" mozallowfullscreen="mozallowfullscreen" msallowfullscreen="msallowfullscreen" oallowfullscreen="oallowfullscreen" webkitallowfullscreen="webkitallowfullscreen" sandbox="allow-top-navigation allow-same-origin allow-forms allow-scripts" allow="screen-wake-lock"></iframe>
+<iframe width="100%" height="100%" src="<?php if(strpos($spurl,'player.bilibili.com')){echo $spurl.'&as_wide=1&high_quality=1&danmaku=0';}else{echo $spurl;} ?>" frameborder="0" border="0" marginwidth="0" marginheight="0" scrolling="no" allowfullscreen="allowfullscreen" mozallowfullscreen="mozallowfullscreen" msallowfullscreen="msallowfullscreen" oallowfullscreen="oallowfullscreen" webkitallowfullscreen="webkitallowfullscreen" sandbox="allow-top-navigation allow-same-origin allow-forms allow-scripts" allow="screen-wake-lock; fullscreen; picture-in-picture;"></iframe>
 <?php else: ?>
 <?php if ($this->options->jxurl): ?>
 
@@ -247,10 +247,10 @@ $xl=0;
 $jx=explode("$",$h[$xl])[1];
 ?>
 
-<iframe width="100%" height="100%" src="<?php echo $jx.$spurl; ?>" frameborder="0" border="0" marginwidth="0" marginheight="0" scrolling="no" allowfullscreen="allowfullscreen" mozallowfullscreen="mozallowfullscreen" msallowfullscreen="msallowfullscreen" oallowfullscreen="oallowfullscreen" webkitallowfullscreen="webkitallowfullscreen" allow="screen-wake-lock"></iframe>
+<iframe width="100%" height="100%" src="<?php echo $jx.$spurl; ?>" frameborder="0" border="0" marginwidth="0" marginheight="0" scrolling="no" allowfullscreen="allowfullscreen" mozallowfullscreen="mozallowfullscreen" msallowfullscreen="msallowfullscreen" oallowfullscreen="oallowfullscreen" webkitallowfullscreen="webkitallowfullscreen" allow="screen-wake-lock; fullscreen; picture-in-picture;"></iframe>
 <?php else: ?>
 
-<iframe id="video-iframe" width="100%" height="100%" src="<?php echo theurl.'jx.php?url='.$spurl.'&zimu='.$zimu.'&episodes='.urlencode(json_encode($allEpisodes)).'&currentIndex='.($currentEp-1); ?>" frameborder="0" border="0" marginwidth="0" marginheight="0" scrolling="no" allowfullscreen="allowfullscreen" mozallowfullscreen="mozallowfullscreen" msallowfullscreen="msallowfullscreen" oallowfullscreen="oallowfullscreen" webkitallowfullscreen="webkitallowfullscreen" allow="screen-wake-lock"></iframe>
+<iframe id="video-iframe" width="100%" height="100%" src="<?php echo theurl.'jx.php?url='.$spurl.'&zimu='.$zimu.'&episodes='.urlencode(json_encode($allEpisodes)).'&currentIndex='.($currentEp-1); ?>" frameborder="0" border="0" marginwidth="0" marginheight="0" scrolling="no" allowfullscreen="allowfullscreen" mozallowfullscreen="mozallowfullscreen" msallowfullscreen="msallowfullscreen" oallowfullscreen="oallowfullscreen" webkitallowfullscreen="webkitallowfullscreen" allow="screen-wake-lock; fullscreen; picture-in-picture;"></iframe>
 
 <?php endif; ?>  <?php endif; ?>  </div> <?php endif;?><?php endif;?>
 
