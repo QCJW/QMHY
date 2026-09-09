@@ -103,6 +103,36 @@ $jxurl = new Typecho_Widget_Helper_Form_Element_Textarea('jxurl', NULL, NULL, _t
 $jxurl->setAttribute('class', 'col-mb-12 setc');
 $form->addInput($jxurl);
 
+/* ========== ASMR 实时浏览功能 ========== */
+$asmrTitle = new Typecho_Widget_Helper_Form_Element_Text('asmr_title', NULL, 'ASMR', _t('ASMR 功能'), _t('以下为 ASMR.one 实时浏览配置。开启后可访问 <code>/?asmr=1</code> 或新建独立页面（缩略名 asmr）浏览 ASMR 内容，无需手动导入。'));
+$asmrTitle->setAttribute('class', 'col-mb-12 typecho-option setc');
+$form->addInput($asmrTitle);
+
+$asmrEnable = new Typecho_Widget_Helper_Form_Element_Checkbox('asmr_enable',
+    array('enable' => _t('开启 ASMR 实时浏览')),
+    array(), _t('ASMR 开关'), _t('勾选后启用 ASMR 功能，关闭则访问入口不响应。所有内容匿名访问，无需配置账号密码。'));
+$asmrEnable->setAttribute('class', 'col-mb-12 typecho-option setc');
+$form->addInput($asmrEnable);
+
+// 彻底修改这里的功能为 全年龄模式/正常模式
+$asmrDefaultAge = new Typecho_Widget_Helper_Form_Element_Select('asmr_default_age',
+    array('safe' => _t('全年龄模式（包含全年龄与R15，过滤R18）'), 'normal' => _t('正常模式（显示全部内容，包含R18）')),
+    'safe', _t('站点内容模式'), _t('选择全年龄模式后，前台下拉筛选只显示全年龄和R15，所有展示将强制过滤R18作品。'));
+$asmrDefaultAge->setAttribute('class', 'col-mb-12 col-tb-6 typecho-option setc');
+$form->addInput($asmrDefaultAge);
+
+$asmrDefaultTag = new Typecho_Widget_Helper_Form_Element_Text('asmr_default_tag', NULL, NULL, _t('默认搜索标签'), _t('留空则列出全部；可填如 舔耳、催眠 等，多个标签用英文逗号分隔'));
+$asmrDefaultTag->setAttribute('class', 'col-mb-12 col-tb-6 typecho-option setc');
+$form->addInput($asmrDefaultTag);
+
+$asmrPagesize = new Typecho_Widget_Helper_Form_Element_Text('asmr_pagesize', NULL, '24', _t('列表每页数量'), _t('数字，默认 24'));
+$asmrPagesize->setAttribute('class', 'col-mb-12 col-tb-6 typecho-option setc');
+$form->addInput($asmrPagesize);
+
+$asmrTimeout = new Typecho_Widget_Helper_Form_Element_Text('asmr_timeout', NULL, '10', _t('API 超时秒数'), _t('cURL 超时时间，默认 10 秒'));
+$asmrTimeout->setAttribute('class', 'col-mb-12 col-tb-6 typecho-option setc');
+$form->addInput($asmrTimeout);
+
 $links = new Typecho_Widget_Helper_Form_Element_Textarea('links', NULL,NULL, _t('首页友链设置'), _t('填写格式例：&lt;a href="https://blog.zezeshe.com/" target="_blank"&gt;泽泽社长&lt;/a&gt;，不填则默认不显示友情链接'));$links->setAttribute('class', 'col-mb-12 home');
 $form->addInput($links);
 

@@ -228,12 +228,12 @@ $nextUrl = $this->permalink . '?action=get&p=' . $nextP;
                                 .np-artist { font-size: 16px; margin-bottom: 25px; }
                                 .np-lrc-inner { text-align: center; }
                                 .np-lrc-line.active { transform-origin: center center; }
-                                .np-controls { flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 10px; }
+                                .np-controls { flex-wrap: wrap; justify-content: center; gap: 20px; margin-top: 10px; }
                                 .np-progress-wrap { width: 100%; flex: 0 0 100%; order: 1; margin-bottom: 10px; }
                                 .np-btn-play, .np-btn-nav { order: 2; }
                                 .np-btn-play { width: 64px; height: 64px; }
                                 .np-btn-play svg { width: 28px; height: 28px; }
-                                .np-btn-nav { width: 48px; height: 48px; margin: 0 2px; }
+                                .np-btn-nav { width: 48px; height: 48px; margin: 0 15px; }
                                 .np-range::-webkit-slider-thumb {
                                 width: 20px; height: 20px;
                                 transition: all 0.3s ease;
@@ -262,13 +262,12 @@ $nextUrl = $this->permalink . '?action=get&p=' . $nextP;
                                 </div>
                                 
                                 <div class="np-controls">
-                                    <button class="np-btn-nav" id="np-mode-btn" title="顺序播放"><svg id="icon-mode-order" viewBox="0 0 24 24"><path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/></svg><svg id="icon-mode-repeat" style="display:none" viewBox="0 0 24 24"><path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/></svg><svg id="icon-mode-shuffle" style="display:none" viewBox="0 0 24 24"><path d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z"/></svg></button>
-                                    <button class="np-btn-nav" id="np-prev-btn" title="上一曲"><svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg></button>
+                                    <a href="<?php echo $prevUrl; ?>" class="np-btn-nav" title="上一曲"><svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg></a>
                                     <button class="np-btn-play" id="np-play-btn">
                                         <svg id="icon-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
                                         <svg id="icon-pause" viewBox="0 0 24 24" style="display:none"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
                                     </button>
-                                    <button class="np-btn-nav" id="np-next-btn" title="下一曲"><svg viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg></button>
+                                    <a href="<?php echo $nextUrl; ?>" class="np-btn-nav" title="下一曲"><svg viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg></a>
                                     <div class="np-progress-wrap">
                                         <span id="np-time-current">00:00</span>
                                         <input type="range" class="np-range" id="np-seek" value="0" min="0" max="100" step="0.1">
@@ -280,31 +279,22 @@ $nextUrl = $this->permalink . '?action=get&p=' . $nextP;
 
                         <script>
                         (function(){
-                            var playlist = <?php echo json_encode($flatList); ?>;
-                            var currentIndex = <?php echo $currentP - 1; ?>;
-                            var audio = new Audio();
-                            var btnPlay = document.getElementById('np-play-btn');
-                            var btnPrev = document.getElementById('np-prev-btn');
-                            var btnNext = document.getElementById('np-next-btn');
-                            var btnMode = document.getElementById('np-mode-btn');
+                            var audioSrc = "<?php echo $audioUrl; ?>";
+                            if(!audioSrc) { console.error("Audio URL is empty!"); return; }
+                            var lrcSrc = "<?php echo $lrcUrl; ?>";
+                            var storageKey = "music_pos_" + "<?php echo md5($audioUrl); ?>"; 
+                            var audio = new Audio(audioSrc);
+                            var btn = document.getElementById('np-play-btn');
                             var iconPlay = document.getElementById('icon-play');
                             var iconPause = document.getElementById('icon-pause');
-                            var iconModeOrder = document.getElementById('icon-mode-order');
-                            var iconModeRepeat = document.getElementById('icon-mode-repeat');
-                            var iconModeShuffle = document.getElementById('icon-mode-shuffle');
                             var cover = document.getElementById('np-cover');
                             var seek = document.getElementById('np-seek');
                             var timeCurr = document.getElementById('np-time-current');
                             var timeTotal = document.getElementById('np-time-total');
                             var lrcInner = document.getElementById('np-lrc-inner');
-                            var titleEl = document.querySelector('.np-title');
-                            var artistEl = document.querySelector('.np-artist');
                             var isPlaying = false;
                             var isSeeking = false;
                             var lrcData = [];
-                            var songArtist = "<?php echo $songArtist; ?>";
-                            var playMode = 'order';
-                            var lastShuffledIndex = -1;
 
                             function fmtTime(s) {
                                 var m = Math.floor(s / 60); var s = Math.floor(s % 60);
@@ -313,47 +303,61 @@ $nextUrl = $this->permalink . '?action=get&p=' . $nextP;
                             function toggleUI(play) {
                                 if(play) {
                                     iconPlay.style.display = 'none'; iconPause.style.display = 'block';
-                                    cover.classList.add('playing'); btnPlay.classList.add('is-playing');
+                                    cover.classList.add('playing'); btn.classList.add('is-playing');
                                 } else {
                                     iconPlay.style.display = 'block'; iconPause.style.display = 'none';
-                                    cover.classList.remove('playing'); btnPlay.classList.remove('is-playing');
+                                    cover.classList.remove('playing'); btn.classList.remove('is-playing');
                                 }
                             }
                             
+                            // === 核心逻辑修改：支持 LRC 和 VTT 两种格式 ===
                             function parseLrc(text) {
                                 if(!text) return [];
                                 var result = [];
+                                
+                                // 检测是否是 WebVTT 格式 (通常以 WEBVTT 开头)
                                 var isVtt = text.trim().startsWith("WEBVTT");
                                 var lines = text.split('\n');
                                 
+                                // 1. 解析 VTT
                                 if(isVtt) {
+                                    // VTT 时间格式: 00:00.000 或 00:00:00.000
                                     var vttTimeExp = /(\d{2}:)?(\d{2}:\d{2}\.\d{3})/;
                                     var currentStartTime = -1;
+                                    
                                     for(var i=0; i<lines.length; i++) {
                                         var line = lines[i].trim();
                                         if(line === "WEBVTT" || line === "") continue;
+                                        
+                                        // 检查时间行: 00:00.000 --> 00:04.000
                                         if(line.includes('-->')) {
                                             var match = vttTimeExp.exec(line);
                                             if(match) {
+                                                // 解析开始时间
                                                 var parts = match[0].split(':');
                                                 var sec = 0;
-                                                if(parts.length === 3) {
+                                                if(parts.length === 3) { // hh:mm:ss.ms
                                                     sec = parseInt(parts[0])*3600 + parseInt(parts[1])*60 + parseFloat(parts[2]);
-                                                } else {
+                                                } else { // mm:ss.ms
                                                     sec = parseInt(parts[0])*60 + parseFloat(parts[1]);
                                                 }
                                                 currentStartTime = sec;
                                             }
                                         } else if(currentStartTime >= 0) {
+                                            // 这是歌词内容
+                                            // 处理 VTT 可能的标签如 <c.color>...</c>
                                             var content = line.replace(/<[^>]+>/g, ''); 
+                                            // 处理 -> 合并
                                             if(content.includes('->')) {
                                                 content = content.split('->').map(function(s){return s.trim()}).join('\n');
                                             }
                                             result.push({time: currentStartTime, text: content});
-                                            currentStartTime = -1;
+                                            currentStartTime = -1; // 重置，避免多行误判
                                         }
                                     }
-                                } else {
+                                } 
+                                // 2. 解析 LRC (标准逻辑)
+                                else {
                                     var timeExp = /\[(\d{2}):(\d{2})(\.\d{2,3})?\]/;
                                     for(var i=0; i<lines.length; i++) {
                                         var line = lines[i].trim();
@@ -369,6 +373,7 @@ $nextUrl = $this->permalink . '?action=get&p=' . $nextP;
                                     }
                                 }
 
+                                // 排序 & 合并逻辑 (通用)
                                 result.sort(function(a, b){ return a.time - b.time; });
                                 var mergedResult = [];
                                 if(result.length > 0) {
@@ -397,131 +402,10 @@ $nextUrl = $this->permalink . '?action=get&p=' . $nextP;
                                 lrcInner.innerHTML = html;
                             }
 
-                            function loadLrc(lrcUrl) {
-                                if(lrcUrl) {
-                                    fetch(lrcUrl).then(r=>r.text()).then(t=>{ 
-                                        lrcData = parseLrc(t); 
-                                        renderLrc(lrcData); 
-                                    }).catch(()=>{ 
-                                        lrcInner.innerHTML = '<div class="np-lrc-line">歌词加载失败</div>'; 
-                                    });
-                                } else { 
-                                    lrcInner.innerHTML = '<div class="np-lrc-line">暂无歌词</div>'; 
-                                }
-                            }
-
-                            function updatePlaylistUI() {
-                                var items = document.querySelectorAll('.ze-playlist-item');
-                                items.forEach(function(item, idx) {
-                                    if(idx === currentIndex) {
-                                        item.classList.add('active');
-                                        var iconEl = item.querySelector('.item-icon');
-                                        if(iconEl) iconEl.innerHTML = "<i class='uil-music'></i>";
-                                    } else {
-                                        item.classList.remove('active');
-                                        var iconEl = item.querySelector('.item-icon');
-                                        if(iconEl) iconEl.innerHTML = sprintf("%02d", idx + 1);
-                                    }
-                                });
-                            }
-
-                            function sprintf(format, number) {
-                                return format.replace('%02d', number < 10 ? '0' + number : number);
-                            }
-
-                            function updateModeUI() {
-                                iconModeOrder.style.display = 'none';
-                                iconModeRepeat.style.display = 'none';
-                                iconModeShuffle.style.display = 'none';
-                                
-                                if(playMode === 'order') {
-                                    iconModeOrder.style.display = 'block';
-                                    btnMode.title = '顺序播放';
-                                } else if(playMode === 'repeat') {
-                                    iconModeRepeat.style.display = 'block';
-                                    btnMode.title = '单曲循环';
-                                } else if(playMode === 'shuffle') {
-                                    iconModeShuffle.style.display = 'block';
-                                    btnMode.title = '随机播放';
-                                }
-                            }
-
-                            function togglePlayMode() {
-                                if(playMode === 'order') {
-                                    playMode = 'repeat';
-                                } else if(playMode === 'repeat') {
-                                    playMode = 'shuffle';
-                                } else {
-                                    playMode = 'order';
-                                }
-                                updateModeUI();
-                            }
-
-                            function getNextIndex() {
-                                if(playMode === 'repeat') {
-                                    return currentIndex;
-                                } else if(playMode === 'shuffle') {
-                                    var newIndex;
-                                    do {
-                                        newIndex = Math.floor(Math.random() * playlist.length);
-                                    } while(newIndex === currentIndex && playlist.length > 1);
-                                    lastShuffledIndex = currentIndex;
-                                    return newIndex;
-                                } else {
-                                    return (currentIndex + 1) % playlist.length;
-                                }
-                            }
-
-                            function getPrevIndex() {
-                                if(playMode === 'shuffle' && lastShuffledIndex !== -1) {
-                                    var temp = lastShuffledIndex;
-                                    lastShuffledIndex = currentIndex;
-                                    return temp;
-                                }
-                                return (currentIndex - 1 + playlist.length) % playlist.length;
-                            }
-
-                            function loadTrack(index, autoPlay) {
-                                if(index < 0) index = playlist.length - 1;
-                                if(index >= playlist.length) index = 0;
-                                
-                                currentIndex = index;
-                                var song = playlist[currentIndex];
-                                
-                                audio.src = song.url;
-                                titleEl.textContent = song.title;
-                                lrcData = [];
-                                loadLrc(song.lrc);
-                                updatePlaylistUI();
-                                
-                                if(autoPlay) {
-                                    audio.play();
-                                    isPlaying = true;
-                                    toggleUI(true);
-                                }
-                            }
-
-                            btnPlay.addEventListener('click', function() {
-                                if(audio.paused) { 
-                                    audio.play(); 
-                                    isPlaying = true; 
-                                } else { 
-                                    audio.pause(); 
-                                    isPlaying = false; 
-                                }
+                            btn.addEventListener('click', function() {
+                                if(audio.paused) { audio.play(); isPlaying = true; } 
+                                else { audio.pause(); isPlaying = false; }
                                 toggleUI(isPlaying);
-                            });
-
-                            btnMode.addEventListener('click', function() {
-                                togglePlayMode();
-                            });
-
-                            btnPrev.addEventListener('click', function() {
-                                loadTrack(getPrevIndex(), true);
-                            });
-
-                            btnNext.addEventListener('click', function() {
-                                loadTrack(getNextIndex(), true);
                             });
 
                             audio.addEventListener('loadedmetadata', function() {
@@ -531,6 +415,11 @@ $nextUrl = $this->permalink . '?action=get&p=' . $nextP;
                                 }
                                 timeTotal.innerText = fmtTime(duration);
                                 seek.max = duration;
+                                var last = window.sessionStorage.getItem(storageKey);
+                                if(last && !isNaN(parseFloat(last))) {
+                                    audio.currentTime = parseFloat(last);
+                                    seek.style.backgroundImage = `linear-gradient(to right, #fff 0%, #fff ${(parseFloat(last)/duration)*100}%, transparent ${(parseFloat(last)/duration)*100}%)`;
+                                }
                             });
                             
                             audio.addEventListener('durationchange', function() {
@@ -540,6 +429,7 @@ $nextUrl = $this->permalink . '?action=get&p=' . $nextP;
                                 }
                                 timeTotal.innerText = fmtTime(duration);
                                 seek.max = duration;
+                                // 立即更新进度条背景
                                 var progress = (audio.currentTime / duration) * 100;
                                 seek.style.backgroundImage = `linear-gradient(to right, #fff 0%, #fff ${progress}%, transparent ${progress}%)`;
                             });
@@ -548,7 +438,9 @@ $nextUrl = $this->permalink . '?action=get&p=' . $nextP;
                                 if(isSeeking) return;
                                 seek.value = audio.currentTime;
                                 timeCurr.innerText = fmtTime(audio.currentTime);
+                                window.sessionStorage.setItem(storageKey, audio.currentTime);
                                 
+                                // 更新进度条渐变
                                 if(!isNaN(audio.duration) && audio.duration > 0) {
                                     var progress = (audio.currentTime / audio.duration) * 100;
                                     seek.style.backgroundImage = `linear-gradient(to right, #fff 0%, #fff ${progress}%, transparent ${progress}%)`;
@@ -574,6 +466,7 @@ $nextUrl = $this->permalink . '?action=get&p=' . $nextP;
                                 }
                             });
 
+                            // 兼容PC和移动端的触摸事件
                             seek.addEventListener('mousedown', function() { 
                                 isSeeking = true;
                                 this.style.opacity = '0.7';
@@ -615,21 +508,12 @@ $nextUrl = $this->permalink . '?action=get&p=' . $nextP;
                                     this.style.backgroundImage = `linear-gradient(to right, #fff 0%, #fff ${progress}%, transparent ${progress}%)`;
                                 }
                             });
+                            audio.addEventListener('ended', function() { toggleUI(false); audio.currentTime = 0; });
 
-                            audio.addEventListener('ended', function() { 
-                                loadTrack(getNextIndex(), true);
-                            });
-
-                            updateModeUI();
-                            loadTrack(currentIndex, false);
-
-                            document.addEventListener('click', function(e) {
-                                var item = e.target.closest('.ze-playlist-item');
-                                if(item && item.dataset.index !== undefined) {
-                                    var idx = parseInt(item.dataset.index);
-                                    loadTrack(idx, true);
-                                }
-                            });
+                            if(lrcSrc) {
+                                fetch(lrcSrc).then(r=>r.text()).then(t=>{ lrcData = parseLrc(t); renderLrc(lrcData); })
+                                .catch(()=>{ lrcInner.innerHTML = '<div class="np-lrc-line">歌词加载失败</div>'; });
+                            } else { lrcInner.innerHTML = '<div class="np-lrc-line">暂无歌词</div>'; }
                         })();
                         </script>
                     </div>
@@ -650,7 +534,7 @@ $nextUrl = $this->permalink . '?action=get&p=' . $nextP;
         <?php if ($_GET['action'] == 'get' && 'GET' == $_SERVER['REQUEST_METHOD']): ?>
         <div class="uk-flex uk-flex-between">
             <div class="video-info-details">
-                <!-- <span>播放量: <?php get_post_view($this); ?></span> -->
+                <span><?php get_post_view($this, 1); ?></span>
             </div>
             <div class="video-likes">
                 <a href="javascript:;" data-action="like" data-id="<?php $this->cid(); ?>" class="btn-like">
@@ -860,11 +744,11 @@ $nextUrl = $this->permalink . '?action=get&p=' . $nextP;
                                 $link = $this->permalink . '?action=get&p=' . $pIndex;
                                 
                                 // 输出美化后的列表元素
-                                echo "<div class='ze-playlist-item {$isActiveClass}' data-index='" . ($pIndex - 1) . "'>
+                                echo "<a href='$link' class='ze-playlist-item {$isActiveClass}'>
                                         <div class='item-icon'>{$icon}</div>
                                         <div class='item-title'>{$song['title']}</div>
                                         <div class='item-play-btn'><i class='uil-play'></i></div>
-                                      </div>";
+                                      </a>";
                             ?>
                         <?php endforeach; ?>
                         

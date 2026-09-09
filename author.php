@@ -107,7 +107,7 @@ $num=getPostHtmImg($this,1);
 <a href="<?php $this->permalink(); ?><?php if($this->fields->mp4&&strlen($this->fields->mp4) > 10){ echo '?action=get&p=1';}?>" class="video-post">
 
 <div class="video-post-thumbnail">
-<!-- <span class="video-post-count"><?php get_post_view($this); ?></span> -->
+<span class="video-post-count" style="display:none"><?php get_post_view($this); ?></span>
 <?php if($this->fields->postType == 'video'): ?><span class="play-btn-trigger"></span><?php endif; ?> 
 
 <img src="<?php showThumbnail($this); ?>" alt="">
@@ -169,7 +169,7 @@ $num=getPostHtmImg($sc,1);
 <a href="<?php $sc->permalink(); ?><?php if($sc->fields->mp4&&strlen($sc->fields->mp4) > 10){ echo '?action=get&p=1';}?>" class="video-post">
 
 <div class="video-post-thumbnail">
-<!-- <span class="video-post-count"><?php get_post_view($sc); ?></span> -->
+<span class="video-post-count" style="display:none"><?php get_post_view($sc); ?></span>
 <?php if($sc->fields->postType == 'video'): ?><span class="play-btn-trigger"></span><?php endif; ?> 
 
 <img src="<?php showThumbnail($sc); ?>" alt="">

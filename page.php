@@ -1,4 +1,11 @@
 <?php if (!defined('__TYPECHO_ROOT_DIR__')) exit; ?>
+<?php
+// ASMR 独立页面入口：缩略名为 asmr 时走 ze-asmr.php
+if ($this->slug === 'asmr') {
+    $this->need('ze-asmr.php');
+    return;
+}
+?>
 <?php $this->need('header.php'); ?>
 <?php $this->need('sidebar.php'); ?>
 <div class="bg-gradient-primary">

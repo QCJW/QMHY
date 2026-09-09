@@ -47,9 +47,8 @@ $newurl=$sideurl.$_SERVER['REQUEST_URI'];
     <!--结束显示页面-->
 
 
-                            <!-- 外部链接 -->
-                            <li> <a href="https://dearestie.xyz?ref_id=549a8115-2bc8-484f-8673-65a99d6201c7" target="_blank"> <i class="uil-heart"></i> <span> Ai女友💋 </span> </a></li>
-                            <li> <a href="https://missai.life//home?inviteCode=FA86290C" target="_blank"> <i class="uil-star"></i> <span> AI女神 </span> </a></li>
+                            
+                           
 
 
 </ul>

@@ -64,7 +64,7 @@ class Widget_Post_hot extends Widget_Abstract_Contents
 <div tabindex="-1" class="uk-animation-slide-bottom-small">
 <a href="<?php $hot->permalink(); ?><?php if($hot->fields->mp4&&strlen($hot->fields->mp4) > 10){ echo '?action=get&p=1';}?>" class="video-post">
 <div class="media media-3x4">
-<!-- <span class="video-post-count"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;"><?php get_post_view($hot); ?></font></font></span> -->
+<span class="video-post-count" style="display:none"><?php get_post_view($hot); ?></span>
 <div class="media-content scrollLoading" data-xurl="<?php showThumbnail($hot); ?>"></div>
 </div>
 <div class="video-post-content">

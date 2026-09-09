@@ -39,6 +39,11 @@ if(isset($_GET['register'])&&!$this->user->hasLogin()&&$this->options->allowRegi
  $this->need('register.php');exit;
 }
 
+// ASMR.one 实时浏览入口
+if(isset($_GET['asmr'])){
+ $this->need('ze-asmr.php');exit;
+}
+
  $this->need('header.php');
 $this->need('sidebar.php');
  include 'config.php';
