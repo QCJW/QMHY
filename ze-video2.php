@@ -241,11 +241,11 @@ if($this->options->jxurl && !$isDirectLink && !$isExternal){
 }
 ?>
 
-<?php if (($_GET['action'] == 'get' && 'GET' == $_SERVER['REQUEST_METHOD'])): ?>
+<?php if ((isset($_GET['action']) && $_GET['action'] == 'get' && 'GET' == $_SERVER['REQUEST_METHOD'])): ?>
 <div id="video-box" uk-sticky="top: 400 ;media : @s" cls-active="video-resized uk-animation-slide-right;" class="uk-sticky">
 <span class="icon-feather-x btn-box-close" uk-toggle="target: #video-box ; cls: video-resized-hedden uk-animation-slide-left"></span>
 
-<?php if(!$this->user->hasLogin() && $this->options->login>0 && $this->options->login<=$_GET['p']):?>
+<?php if(!$this->user->hasLogin() && $this->options->login>0 && $this->options->login<=intval($_GET['p'] ?? 1)):?>
 <div class="uk-alert-danger" uk-alert>
 <p>从本集起，后续内容需要注册登录本站后才可观看！</p>
 </div>
